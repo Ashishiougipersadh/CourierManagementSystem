@@ -1,0 +1,133 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using TakealotDriverManagementSystem.Data
+@inject SignInManager<User> SignInManager
+@inject UserManager<User> _userManager
+@inject ApplicationDbContext _context;
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Takealot Admin Dashboard</title>
+    <link href="~/css/driver.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+
+</head>
+<body>
+    <div class="dashboard-wrapper" id="dashboardWrapper">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a asp-action="Index" asp-controller="Home">
+                    <img src="~/images/takealot-alt-logo.png" alt="Takealot Logo" class="full-logo" />
+                    <img src="~/images/takealot-icon.png" alt="Takealot Icon" class="collapsed-logo" />
+                </a>
+            </div>
+            <ul class="sidebar-nav">
+                <li class="sidebar-nav-item">
+                    <a asp-action="Vacancies" asp-controller="Driver" class="sidebar-nav-link">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span class="menu-text">Driver Vacancies</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a asp-action="JobApplications" asp-controller="Driver" class="sidebar-nav-link">
+                        <i class="fas fa-warehouse"></i>
+                        <span class="menu-text">My Applications</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item ">
+                    <a asp-action="VehicleDetails" asp-controller="Driver" class="sidebar-nav-link">
+                        <i class="fas fa-truck"></i>
+                        <span class="menu-text">My Vehicle</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a asp-action="Notifications" asp-controller="Driver" class="sidebar-nav-link">
+                        <i class="fas fa-bell"></i>
+                        <span class="menu-text">Notifications</span>
+                    </a>
+                </li>
+                
+                <li class="sidebar-nav-item">
+                    <a asp-action="Profile" asp-controller="Driver" class="sidebar-nav-link">
+                        <i class="fas fa-user-circle"></i>
+                        <span class="menu-text">My Profile</span>
+                    </a>
+                </li>
+
+            </ul>
+        </aside>
+
+        <div class="content-area">
+            <nav class="top-navbar">
+                <button class="toggle-btn" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="navbar-title">@ViewData["Title"]</div>
+                <div class="navbar-icons-right">
+                    <div class="notification-dropdown-container">
+                        <div class="notification-dropdown-toggle" id="notificationDropdownToggle">
+                            <i class="fas fa-bell fa-2x"></i>
+                            @if (Context.User.Identity.IsAuthenticated)
+                            {
+                                var unreadCount = await _context.Notifications
+                                .CountAsync(n => n.UserId == _userManager.GetUserId(User) && !n.IsRead);
+
+                                @if (unreadCount > 0)
+                                {
+                                    <span class="notification-badge">@unreadCount</span>
+                                }
+                            }
+                        </div>
+                        <ul class="notification-dropdown-menu" id="notificationDropdownMenu">
+                            @if (Context.User.Identity.IsAuthenticated)
+                            {
+                                var notifications = await _context.Notifications
+                                .Where(n => n.UserId == _userManager.GetUserId(User))
+                                .OrderByDescending(n => n.CreatedAt)
+                                .Take(5)
+                                .ToListAsync();
+
+                                @foreach (var notification in notifications)
+                                {
+                                    <li class="notification-item @(notification.IsRead ? "" : "unread")" data-id="@notification.Id">
+                                        <div class="notification-text">@notification.Message</div>
+                                        <span class="notification-datetime">@notification.CreatedAt.ToString("g")</span>
+                                    </li>
+                                }
+                            }
+                            <li class="notification-footer">
+                                <a asp-action="Notifications" asp-controller="Admin">View All Notifications</a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="user-dropdown-container">
+                        <div class="user-dropdown-toggle" id="userDropdownToggle">
+                            <i class="fas fa-user-circle fa-2x"></i>
+                        </div>
+                        <ul class="user-dropdown-menu" id="userDropdownMenu">
+                            <li><a asp-action="Profile" asp-controller="Driver">My Profile</a></li>
+                            <li><a asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+            <main class="main-dashboard-content">
+                @RenderBody()
+
+            </main>
+        </div>
+    </div>
+
+</body>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+<script src="~/js/site.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</html>

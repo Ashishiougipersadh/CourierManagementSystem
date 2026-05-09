@@ -1,0 +1,52 @@
+﻿@model IEnumerable<TakealotDriverManagementSystem.Models.Driver>
+@{
+    ViewData["Title"] = "Driver Management";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1 style="color: #0773ba">Driver Management</h1>
+<hr />
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+<table class="table table-bordered table-striped text-center align-middle">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>License Number</th>
+            <th>Assigned Vehicle</th>
+            <th>Assign Vehicle</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var driver in Model)
+        {
+            <tr>
+                <td>@driver.User.FirstName @driver.User.LastName</td>
+                <td>@driver.LicenseNumber</td>
+                <td>@(driver.AssignedVehicle?.LicensePlate ?? "None")</td>
+                <td>
+                    <form asp-controller="Admin" asp-action="AssignVehicleToDriver" method="post">
+                        <input type="hidden" name="driverId" value="@driver.Id" />
+                        <select name="vehicleId" class="form-select form-select-sm">
+                            <option value="">-- Select Vehicle --</option>
+                            @foreach (var vehicle in ViewBag.AvailableVehicles as List<TakealotDriverManagementSystem.Models.Vehicle>)
+                            {
+                                <option value="@vehicle.Id">@vehicle.LicensePlate</option>
+                            }
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-primary mt-1">Assign</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
